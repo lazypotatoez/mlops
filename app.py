@@ -17,28 +17,25 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Receive input data as JSON
-        data = request.get_json()
+        if request.content_type != "application/json":
+            return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
 
-        # Convert JSON input into a DataFrame
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
+
         df = pd.DataFrame([data])
 
-        # Print incoming columns (for debugging)
-        print("Received data columns:", df.columns.tolist())  
-
-        # Expected model input features (check your trained model)
+        # Expected model input features
         expected_columns = ['Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
                             'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
                             'BuildingArea', 'YearBuilt', 'CouncilArea', 'Lattitude', 'Longtitude', 
                             'Region', 'Propertycount']
 
-        # Ensure the input matches expected columns
-        df = df.reindex(columns=expected_columns, fill_value=0)  # Fill missing values with 0
+        df = df.reindex(columns=expected_columns, fill_value=0)
 
         # Use predict_model() for PyCaret predictions
         prediction = predict_model(model, data=df)
-
-        # Extract predicted value
         predicted_value = prediction["Label"].tolist()
 
         return jsonify({"prediction": predicted_value})
@@ -46,6 +43,3 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Run the app
-if __name__ == "__main__":
-    app.run(debug=True)
