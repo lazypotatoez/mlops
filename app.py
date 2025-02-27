@@ -16,23 +16,28 @@ def home():
 # Route for making predictions
 @app.route("/predict", methods=["POST"])
 def predict():
-    # Get form data
-    data = {
-        "Rooms": [float(request.form["Rooms"])],
-        "Distance": [float(request.form["Distance"])],
-        "Landsize": [float(request.form["Landsize"])],
-        "BuildingArea": [float(request.form["BuildingArea"])],
-        "YearBuilt": [float(request.form["YearBuilt"])]
-    }
+    try:
+        # Get form data
+        data = {
+            "Rooms": [float(request.form["Rooms"])],
+            "Distance": [float(request.form["Distance"])],
+            "Landsize": [float(request.form["Landsize"])],
+            "BuildingArea": [float(request.form["BuildingArea"])],
+            "YearBuilt": [float(request.form["YearBuilt"])]
+        }
 
-    # Convert to DataFrame
-    df = pd.DataFrame.from_dict(data)
+        # Convert to DataFrame
+        df = pd.DataFrame.from_dict(data)
 
-    # Make predictions
-    predictions = predict_model(model, data=df)
+        # Make predictions
+        predictions = predict_model(model, data=df)
 
-    # Return result
-    return jsonify({"Predicted Price": predictions["Label"][0]})
+        # Return result
+        return jsonify({"Predicted Price": float(predictions["Label"][0])})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
+# Run the app
 if __name__ == "__main__":
     app.run(debug=True)
