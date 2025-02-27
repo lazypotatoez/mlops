@@ -1,9 +1,18 @@
 Flask>=2.3.2
 Werkzeug>=3.0.0
-pandas
-pycaret==3.0.0
 gunicorn==20.1.0
-scikit-learn==1.4.2
+
+# Core dependencies
+pandas==1.5.3
+numpy==1.26.4
 scipy==1.9.3
+scikit-learn==1.2.2
 joblib==1.2.0
 Cython==0.29.36
+
+# PyCaret and dependencies
+pycaret==3.0.0
+imbalanced-learn==0.10.1
+sktime==0.16.1
+pmdarima==2.0.4
+tbats==1.1.3
