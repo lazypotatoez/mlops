@@ -25,54 +25,26 @@ def predict():
         if not data:
             return jsonify({"error": "Invalid JSON data"}), 400
 
-        # Extract only relevant input fields
-        input_features = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt']
+        # Convert to DataFrame
         df = pd.DataFrame([data])
 
-        # Define default values for missing categorical fields
-        default_values = {
-            "Suburb": "Melbourne",
-            "Address": "123 Main St",
-            "Type": "h",
-            "Method": "S",
-            "Seller": "RealEstateAgent",
-            "Date": "2025-01-01",
-            "Postcode": 3000,
-            "Bedroom2": data.get("Rooms", 2),  # Use 'Rooms' as fallback
-            "Bathroom": 1,
-            "Car": 1,
-            "CouncilArea": "Melbourne City",
-            "Lattitude": -37.8136,
-            "Longtitude": 144.9631,
-            "Region": "Northern Metropolitan",
-            "Propertycount": 5000
-        }
-
-        # Fill missing fields with default values
-        for key, value in default_values.items():
-            if key not in df.columns:
-                df[key] = value
-
-        # Ensure numeric columns are floats
-        numeric_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt', 'Bedroom2', 'Bathroom', 'Car', 'Postcode', 'Lattitude', 'Longtitude', 'Propertycount']
+        # Ensure numeric columns are properly formatted
+        numeric_columns = ['Rooms', 'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize',
+                           'BuildingArea', 'YearBuilt', 'Lattitude', 'Longtitude', 'Propertycount']
         df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
 
-        # Ensure categorical fields are strings
-        categorical_columns = ["Suburb", "Address", "Type", "Method", "Seller", "CouncilArea", "Region"]
-        df[categorical_columns] = df[categorical_columns].astype(str)
+        # Expected model input features
+        expected_columns = ['Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
+                            'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
+                            'BuildingArea', 'YearBuilt', 'CouncilArea', 'Lattitude', 'Longtitude', 
+                            'Region', 'Propertycount']
 
-        # Order the dataframe columns to match model expectations
-        expected_columns = [
-            'Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
-            'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
-            'BuildingArea', 'YearBuilt', 'CouncilArea', 'Lattitude', 'Longtitude', 
-            'Region', 'Propertycount'
-        ]
-        df = df.reindex(columns=expected_columns, fill_value=0)
+        # Reindex to match model’s expected columns
+        df = df.reindex(columns=expected_columns, fill_value="Unknown")
 
         # Make prediction
         prediction = predict_model(model, data=df)
-        predicted_value = prediction["Label"].tolist()[0]  # Extract price
+        predicted_value = prediction["Label"].tolist()[0]
 
         return jsonify({"prediction": predicted_value})
 
