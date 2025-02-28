@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>House Price Prediction</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .container { width: 50%; margin: 50px auto; text-align: center; }
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 50%; margin: 50px auto; }
         input { width: 80%; padding: 10px; margin: 5px; }
-        button { padding: 10px 20px; background-color: blue; color: white; border: none; }
+        button { padding: 10px 20px; background-color: blue; color: white; border: none; cursor: pointer; }
+        #predictionResult { font-size: 18px; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h2>Enter House Details for Prediction</h2>
         <form id="predictForm">
@@ -33,30 +35,32 @@
             <button type="submit">Predict</button>
         </form>
 
-        <h3 id="predictionResult"></h3>
+        <div id="predictionResult"></div>
     </div>
 
     <script>
         document.getElementById("predictForm").onsubmit = async function(event) {
-            event.preventDefault(); // Prevent page reload
-            
+            event.preventDefault();
+
             let formData = {
-                Rooms: parseInt(document.getElementById("rooms").value),
-                Distance: parseFloat(document.getElementById("distance").value),
-                Landsize: parseFloat(document.getElementById("landsize").value),
-                BuildingArea: parseFloat(document.getElementById("buildingArea").value),
-                YearBuilt: parseInt(document.getElementById("yearBuilt").value)
+                Rooms: document.getElementById("rooms").value,
+                Distance: document.getElementById("distance").value,
+                Landsize: document.getElementById("landsize").value,
+                BuildingArea: document.getElementById("buildingArea").value,
+                YearBuilt: document.getElementById("yearBuilt").value
             };
 
-            let response = await fetch("/predict", {
+            let response = await fetch("https://mlops-s1c4.onrender.com/predict", {  // Use full API URL
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             });
 
             let result = await response.json();
-            document.getElementById("predictionResult").innerText = "Predicted Price: $" + result.prediction;
+            document.getElementById("predictionResult").innerText = 
+                result.prediction ? "Predicted Price: $" + result.prediction[0] : "Error: " + result.error;
         };
     </script>
+
 </body>
 </html>
