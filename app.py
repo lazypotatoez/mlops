@@ -8,40 +8,63 @@ app = Flask(__name__)
 # Load the trained model
 model = load_model("best_pycaret_model")  # Ensure your model file exists
 
-# Route for home page
+# Expected feature columns for the model
+EXPECTED_COLUMNS = ['Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date',
+                    'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize',
+                    'BuildingArea', 'YearBuilt', 'CouncilArea', 'Latitude', 'Longitude',
+                    'Region', 'Propertycount']
+
+# Default values for missing columns
+DEFAULT_VALUES = {
+    "Suburb": "Unknown",
+    "Address": "Unknown",
+    "Type": "h",
+    "Method": "S",
+    "Seller": "Agent",
+    "Date": "2025-01-01",
+    "Postcode": 3000,
+    "Bedroom2": 3,
+    "Bathroom": 1,
+    "Car": 1,
+    "CouncilArea": "Unknown",
+    "Latitude": -37.8136,
+    "Longitude": 144.9631,
+    "Region": "Metropolitan",
+    "Propertycount": 5000
+}
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# Route for making predictions
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Collect data from the HTML form
-        rooms = int(request.form.get("rooms"))
-        distance = float(request.form.get("distance"))
-        landsize = float(request.form.get("landsize"))
-        building_area = float(request.form.get("building_area"))
-        year_built = int(request.form.get("year_built"))
+        if request.content_type != "application/json":
+            return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
 
-        # Create a DataFrame with only the required features
-        df = pd.DataFrame([{
-            "Rooms": rooms,
-            "Distance": distance,
-            "Landsize": landsize,
-            "BuildingArea": building_area,
-            "YearBuilt": year_built
-        }])
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
 
-        # Use PyCaret model for prediction
+        # Fill in missing values
+        for key, default in DEFAULT_VALUES.items():
+            if key not in data:
+                data[key] = default  # Assign default value if missing
+
+        df = pd.DataFrame([data])
+
+        # Ensure correct feature columns
+        df = df.reindex(columns=EXPECTED_COLUMNS)
+
+        # Make prediction
         prediction = predict_model(model, data=df)
-        predicted_value = prediction["Label"].iloc[0]  # Get first prediction
+        predicted_value = prediction["Label"].tolist()
 
-        return render_template("index.html", prediction=predicted_value)
+        return jsonify({"prediction": predicted_value})
 
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Run the app
 if __name__ == "__main__":
     app.run(debug=True)
