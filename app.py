@@ -5,7 +5,7 @@ from pycaret.regression import load_model, predict_model
 # Initialize Flask app
 app = Flask(__name__)
 
-# Load the trained model (Ensure the model file exists)
+# Load the trained model
 model = load_model("best_pycaret_model")
 
 # Route for home page
@@ -25,41 +25,43 @@ def predict():
         if not data:
             return jsonify({"error": "Invalid JSON data"}), 400
 
-        # Ensure only the required fields are extracted
-        input_features = [
-            'Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt'
-        ]
-
+        # Extract only relevant input fields
+        input_features = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt']
         df = pd.DataFrame([data])
 
-        # Correcting categorical fields that were previously set to 'Unknown'
+        # Define default values for missing categorical fields
         default_values = {
-            "Suburb": "Melbourne",  # Set a valid suburb name
-            "Address": "123 Main St", 
-            "Type": "h",  # Most common type
+            "Suburb": "Melbourne",
+            "Address": "123 Main St",
+            "Type": "h",
             "Method": "S",
             "Seller": "RealEstateAgent",
             "Date": "2025-01-01",
             "Postcode": 3000,
-            "Bedroom2": data.get("Rooms", 2),  # If missing, use 'Rooms'
+            "Bedroom2": data.get("Rooms", 2),  # Use 'Rooms' as fallback
             "Bathroom": 1,
             "Car": 1,
             "CouncilArea": "Melbourne City",
-            "Lattitude": -37.8136,  # Central Melbourne coordinates
+            "Lattitude": -37.8136,
             "Longtitude": 144.9631,
             "Region": "Northern Metropolitan",
-            "Propertycount": 5000  # Average for region
+            "Propertycount": 5000
         }
 
+        # Fill missing fields with default values
         for key, value in default_values.items():
             if key not in df.columns:
                 df[key] = value
 
-        # Ensure all categorical values are strings
+        # Ensure numeric columns are floats
+        numeric_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt', 'Bedroom2', 'Bathroom', 'Car', 'Postcode', 'Lattitude', 'Longtitude', 'Propertycount']
+        df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
+
+        # Ensure categorical fields are strings
         categorical_columns = ["Suburb", "Address", "Type", "Method", "Seller", "CouncilArea", "Region"]
         df[categorical_columns] = df[categorical_columns].astype(str)
 
-        # Reorder the dataframe to match the model’s expected features
+        # Order the dataframe columns to match model expectations
         expected_columns = [
             'Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
             'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
@@ -68,13 +70,9 @@ def predict():
         ]
         df = df.reindex(columns=expected_columns, fill_value=0)
 
-        # Ensure numeric columns are floats
-        numeric_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt', 'Bedroom2', 'Bathroom', 'Car', 'Postcode', 'Lattitude', 'Longtitude', 'Propertycount']
-        df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
-
         # Make prediction
         prediction = predict_model(model, data=df)
-        predicted_value = prediction["Label"].tolist()[0]  # Extract predicted price
+        predicted_value = prediction["Label"].tolist()[0]  # Extract price
 
         return jsonify({"prediction": predicted_value})
 
