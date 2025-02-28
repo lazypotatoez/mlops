@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
+from pycaret.regression import load_model
 
-# Load the trained model
-model_path = "house_price_model_tuned.pkl"
-model = pickle.load(open(model_path, "rb"))
+# ✅ Load the trained PyCaret model correctly
+model_path = "house_price_model_tuned"
+model = load_model(model_path)  # Corrected model loading
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -36,8 +37,8 @@ def predict():
         # Convert to DataFrame
         input_df = pd.DataFrame([input_data])
 
-        # Make prediction
-        prediction = model.predict(input_df)[0]
+        # ✅ Use PyCaret's `predict_model()` instead of `.predict()`
+        prediction = predict_model(model, data=input_df)["Label"][0]
 
         return render_template("index.html", prediction_text=f"Predicted House Price: ${round(prediction, 2)}")
 
