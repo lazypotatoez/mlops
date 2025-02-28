@@ -8,7 +8,8 @@ import joblib
 joblib.memory = None
 
 model_path = "house_price_model_tuned"
-model = load_model(model_path)  # Load the model normally
+model = load_model(model_path, memory=False)  # Disable PyCaret memory caching
+
 
 
 # Initialize Flask app
