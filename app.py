@@ -6,65 +6,48 @@ from pycaret.regression import load_model, predict_model
 app = Flask(__name__)
 
 # Load the trained model
-model = load_model("best_pycaret_model")  # Ensure your model file exists
+model = load_model("best_pycaret_model")  # Ensure this file exists in your deployment
 
-# Expected feature columns for the model
-EXPECTED_COLUMNS = ['Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date',
-                    'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize',
-                    'BuildingArea', 'YearBuilt', 'CouncilArea', 'Latitude', 'Longitude',
-                    'Region', 'Propertycount']
-
-# Default values for missing columns
-DEFAULT_VALUES = {
-    "Suburb": "Unknown",
-    "Address": "Unknown",
-    "Type": "h",
-    "Method": "S",
-    "Seller": "Agent",
-    "Date": "2025-01-01",
-    "Postcode": 3000,
-    "Bedroom2": 3,
-    "Bathroom": 1,
-    "Car": 1,
-    "CouncilArea": "Unknown",
-    "Latitude": -37.8136,
-    "Longitude": 144.9631,
-    "Region": "Metropolitan",
-    "Propertycount": 5000
-}
-
+# Route for home page (renders HTML form)
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route('/predict', methods=['POST'])
+# Route for making predictions
+@app.route("/predict", methods=["POST"])
 def predict():
     try:
+        # Ensure correct content type
         if request.content_type != "application/json":
             return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
 
+        # Get JSON input from request
         data = request.get_json()
         if not data:
             return jsonify({"error": "Invalid JSON data"}), 400
 
-        # Fill in missing values
-        for key, default in DEFAULT_VALUES.items():
-            if key not in data:
-                data[key] = default  # Assign default value if missing
-
+        # Convert JSON to DataFrame
         df = pd.DataFrame([data])
 
-        # Ensure correct feature columns
-        df = df.reindex(columns=EXPECTED_COLUMNS)
+        # Define the expected input columns for the model
+        expected_columns = [
+            "Rooms", "Distance", "Landsize", "BuildingArea", "YearBuilt"
+        ]
 
-        # Make prediction
+        # Ensure only expected columns are sent to the model
+        df = df.reindex(columns=expected_columns, fill_value=0)
+
+        # Make prediction using PyCaret
         prediction = predict_model(model, data=df)
-        predicted_value = prediction["Label"].tolist()
+
+        # Extract predicted price
+        predicted_value = prediction["Label"].tolist()[0]
 
         return jsonify({"prediction": predicted_value})
 
     except Exception as e:
         return jsonify({"error": str(e)})
 
+# Run Flask app (for local testing)
 if __name__ == "__main__":
     app.run(debug=True)
