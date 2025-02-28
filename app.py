@@ -5,7 +5,8 @@ from pycaret.regression import load_model
 
 # ✅ Load the trained PyCaret model correctly
 model_path = "house_price_model_tuned"
-model = load_model(model_path)  # Corrected model loading
+model = load_model(model_path, memory="none")  # Disable caching
+
 
 # Initialize Flask app
 app = Flask(__name__)
