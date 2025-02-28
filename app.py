@@ -29,13 +29,33 @@ def predict():
         # Convert JSON to DataFrame
         df = pd.DataFrame([data])
 
-        # Define the expected input columns for the model
+        # Model expects these features (modify this list to match your trained model)
         expected_columns = [
-            "Rooms", "Distance", "Landsize", "BuildingArea", "YearBuilt"
+            "Suburb", "Address", "Rooms", "Type", "Method", "Seller", "Date",
+            "Distance", "Postcode", "Bedroom2", "Bathroom", "Car", "Landsize",
+            "BuildingArea", "YearBuilt", "CouncilArea", "Lattitude", "Longtitude",
+            "Region", "Propertycount"
         ]
 
-        # Ensure only expected columns are sent to the model
-        df = df.reindex(columns=expected_columns, fill_value=0)
+        # Fill missing categorical fields with placeholder values
+        df["Suburb"] = "Unknown"
+        df["Address"] = "Unknown"
+        df["Type"] = "h"  # Default to "house"
+        df["Method"] = "S"  # Default to "Sold"
+        df["Seller"] = "GenericAgent"
+        df["Date"] = "2025-01-01"
+        df["Postcode"] = 3000
+        df["Bedroom2"] = df["Rooms"]  # Use same value as Rooms
+        df["Bathroom"] = 1
+        df["Car"] = 1
+        df["CouncilArea"] = "Generic Council"
+        df["Lattitude"] = -37.8136  # Default Melbourne latitude
+        df["Longtitude"] = 144.9631  # Default Melbourne longitude
+        df["Region"] = "Northern Metropolitan"
+        df["Propertycount"] = 5000
+
+        # Ensure dataframe has the required columns
+        df = df[expected_columns]
 
         # Make prediction using PyCaret
         prediction = predict_model(model, data=df)
