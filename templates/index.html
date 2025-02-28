@@ -14,28 +14,49 @@
 <body>
     <div class="container">
         <h2>Enter House Details for Prediction</h2>
-        <form action="/predict" method="post">
+        <form id="predictForm">
             <label>Number of Rooms:</label><br>
-            <input type="number" name="rooms" required><br>
+            <input type="number" id="rooms" required><br>
 
             <label>Distance to CBD (km):</label><br>
-            <input type="text" name="distance" required><br>
+            <input type="text" id="distance" required><br>
 
             <label>Land Size (sq ft):</label><br>
-            <input type="text" name="landsize" required><br>
+            <input type="text" id="landsize" required><br>
 
             <label>Building Area (sq ft):</label><br>
-            <input type="text" name="building_area" required><br>
+            <input type="text" id="buildingArea" required><br>
 
             <label>Year Built:</label><br>
-            <input type="number" name="year_built" required><br>
+            <input type="number" id="yearBuilt" required><br>
 
             <button type="submit">Predict</button>
         </form>
 
-        {% if prediction %}
-        <h3>Predicted Price: ${{ prediction }}</h3>
-        {% endif %}
+        <h3 id="predictionResult"></h3>
     </div>
+
+    <script>
+        document.getElementById("predictForm").onsubmit = async function(event) {
+            event.preventDefault(); // Prevent page reload
+            
+            let formData = {
+                Rooms: parseInt(document.getElementById("rooms").value),
+                Distance: parseFloat(document.getElementById("distance").value),
+                Landsize: parseFloat(document.getElementById("landsize").value),
+                BuildingArea: parseFloat(document.getElementById("buildingArea").value),
+                YearBuilt: parseInt(document.getElementById("yearBuilt").value)
+            };
+
+            let response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+
+            let result = await response.json();
+            document.getElementById("predictionResult").innerText = "Predicted Price: $" + result.prediction;
+        };
+    </script>
 </body>
 </html>
