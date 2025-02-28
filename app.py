@@ -6,7 +6,7 @@ from pycaret.regression import load_model, predict_model
 app = Flask(__name__)
 
 # Load the trained model
-model = load_model("best_pycaret_model")  # Ensure this file exists
+model = load_model("best_pycaret_model")  # Ensure your model file exists
 
 # Route for home page
 @app.route("/")
@@ -17,37 +17,27 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Ensure request contains JSON
-        if not request.is_json:
-            return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
+        # Collect data from the HTML form
+        rooms = int(request.form.get("rooms"))
+        distance = float(request.form.get("distance"))
+        landsize = float(request.form.get("landsize"))
+        building_area = float(request.form.get("building_area"))
+        year_built = int(request.form.get("year_built"))
 
-        # Parse JSON input
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Invalid JSON data"}), 400
+        # Create a DataFrame with only the required features
+        df = pd.DataFrame([{
+            "Rooms": rooms,
+            "Distance": distance,
+            "Landsize": landsize,
+            "BuildingArea": building_area,
+            "YearBuilt": year_built
+        }])
 
-        # Convert to DataFrame
-        df = pd.DataFrame([data])
-
-        # Expected feature names
-        expected_columns = [
-            'Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
-            'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
-            'BuildingArea', 'YearBuilt', 'CouncilArea', 'Lattitude', 'Longtitude', 
-            'Region', 'Propertycount'
-        ]
-
-        # Ensure correct column order
-        df = df.reindex(columns=expected_columns, fill_value=0)
-
-        # **Ensure categorical data is processed correctly**
-        df = df.astype(str)  # Convert all columns to string to avoid NaN errors
-
-        # Predict using the PyCaret model
+        # Use PyCaret model for prediction
         prediction = predict_model(model, data=df)
-        predicted_price = prediction["Label"].tolist()[0]  # Extract price
+        predicted_value = prediction["Label"].iloc[0]  # Get first prediction
 
-        return jsonify({"predicted_price": predicted_price})
+        return render_template("index.html", prediction=predicted_value)
 
     except Exception as e:
         return jsonify({"error": str(e)})
