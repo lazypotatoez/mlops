@@ -15,41 +15,11 @@
     <div class="container">
         <h2>Enter House Details for Prediction</h2>
         <form id="predictForm">
-            <label>Suburb:</label><br>
-            <input type="text" id="suburb" required><br>
-
-            <label>Address:</label><br>
-            <input type="text" id="address" required><br>
-
             <label>Number of Rooms:</label><br>
             <input type="number" id="rooms" required><br>
 
-            <label>Type:</label><br>
-            <input type="text" id="type" required><br>
-
-            <label>Method:</label><br>
-            <input type="text" id="method" required><br>
-
-            <label>Seller:</label><br>
-            <input type="text" id="seller" required><br>
-
-            <label>Date (YYYY-MM-DD):</label><br>
-            <input type="text" id="date" required><br>
-
             <label>Distance to CBD (km):</label><br>
             <input type="text" id="distance" required><br>
-
-            <label>Postcode:</label><br>
-            <input type="number" id="postcode" required><br>
-
-            <label>Number of Bedrooms:</label><br>
-            <input type="number" id="bedroom2" required><br>
-
-            <label>Number of Bathrooms:</label><br>
-            <input type="number" id="bathroom" required><br>
-
-            <label>Number of Parking Spots:</label><br>
-            <input type="number" id="car" required><br>
 
             <label>Land Size (sq ft):</label><br>
             <input type="number" id="landsize" required><br>
@@ -59,21 +29,6 @@
 
             <label>Year Built:</label><br>
             <input type="number" id="yearBuilt" required><br>
-
-            <label>Council Area:</label><br>
-            <input type="text" id="councilArea" required><br>
-
-            <label>Latitude:</label><br>
-            <input type="text" id="latitude" required><br>
-
-            <label>Longitude:</label><br>
-            <input type="text" id="longitude" required><br>
-
-            <label>Region:</label><br>
-            <input type="text" id="region" required><br>
-
-            <label>Property Count:</label><br>
-            <input type="number" id="propertycount" required><br>
 
             <button type="submit">Predict</button>
         </form>
@@ -86,26 +41,11 @@
             event.preventDefault();
             
             let formData = {
-                Suburb: document.getElementById("suburb").value,
-                Address: document.getElementById("address").value,
                 Rooms: parseInt(document.getElementById("rooms").value),
-                Type: document.getElementById("type").value,
-                Method: document.getElementById("method").value,
-                Seller: document.getElementById("seller").value,
-                Date: document.getElementById("date").value,
                 Distance: parseFloat(document.getElementById("distance").value),
-                Postcode: parseInt(document.getElementById("postcode").value),
-                Bedroom2: parseInt(document.getElementById("bedroom2").value),
-                Bathroom: parseInt(document.getElementById("bathroom").value),
-                Car: parseInt(document.getElementById("car").value),
                 Landsize: parseFloat(document.getElementById("landsize").value),
                 BuildingArea: parseFloat(document.getElementById("buildingArea").value),
-                YearBuilt: parseInt(document.getElementById("yearBuilt").value),
-                CouncilArea: document.getElementById("councilArea").value,
-                Lattitude: parseFloat(document.getElementById("latitude").value),
-                Longtitude: parseFloat(document.getElementById("longitude").value),
-                Region: document.getElementById("region").value,
-                Propertycount: parseInt(document.getElementById("propertycount").value)
+                YearBuilt: parseInt(document.getElementById("yearBuilt").value)
             };
 
             let response = await fetch("/predict", {
