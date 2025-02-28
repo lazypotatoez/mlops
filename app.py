@@ -5,7 +5,7 @@ from pycaret.regression import load_model, predict_model
 # Initialize Flask app
 app = Flask(__name__)
 
-# Load the trained model (Ensure this file exists in your deployment)
+# Load the trained model (Ensure the model file exists)
 model = load_model("best_pycaret_model")
 
 # Route for home page
@@ -32,18 +32,32 @@ def predict():
 
         df = pd.DataFrame([data])
 
-        # Add default values for missing columns in model
+        # Correcting categorical fields that were previously set to 'Unknown'
         default_values = {
-            "Suburb": "Unknown", "Address": "Unknown", "Type": "h", "Method": "S",
-            "Seller": "GenericAgent", "Date": "2025-01-01", "Postcode": 3000,
-            "Bedroom2": data.get("Rooms", 2), "Bathroom": 1, "Car": 1,
-            "CouncilArea": "Generic Council", "Lattitude": -37.8136, "Longtitude": 144.9631,
-            "Region": "Northern Metropolitan", "Propertycount": 5000
+            "Suburb": "Melbourne",  # Set a valid suburb name
+            "Address": "123 Main St", 
+            "Type": "h",  # Most common type
+            "Method": "S",
+            "Seller": "RealEstateAgent",
+            "Date": "2025-01-01",
+            "Postcode": 3000,
+            "Bedroom2": data.get("Rooms", 2),  # If missing, use 'Rooms'
+            "Bathroom": 1,
+            "Car": 1,
+            "CouncilArea": "Melbourne City",
+            "Lattitude": -37.8136,  # Central Melbourne coordinates
+            "Longtitude": 144.9631,
+            "Region": "Northern Metropolitan",
+            "Propertycount": 5000  # Average for region
         }
 
         for key, value in default_values.items():
             if key not in df.columns:
                 df[key] = value
+
+        # Ensure all categorical values are strings
+        categorical_columns = ["Suburb", "Address", "Type", "Method", "Seller", "CouncilArea", "Region"]
+        df[categorical_columns] = df[categorical_columns].astype(str)
 
         # Reorder the dataframe to match the model’s expected features
         expected_columns = [
@@ -53,6 +67,10 @@ def predict():
             'Region', 'Propertycount'
         ]
         df = df.reindex(columns=expected_columns, fill_value=0)
+
+        # Ensure numeric columns are floats
+        numeric_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt', 'Bedroom2', 'Bathroom', 'Car', 'Postcode', 'Lattitude', 'Longtitude', 'Propertycount']
+        df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
 
         # Make prediction
         prediction = predict_model(model, data=df)
