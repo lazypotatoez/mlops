@@ -17,7 +17,6 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Ensure correct content type
         if request.content_type != "application/json":
             return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
 
@@ -29,18 +28,14 @@ def predict():
         df = pd.DataFrame([data])
 
         # Ensure numeric columns are properly formatted
-        numeric_columns = ['Rooms', 'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize',
-                           'BuildingArea', 'YearBuilt', 'Lattitude', 'Longtitude', 'Propertycount']
+        numeric_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt']
         df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
 
-        # Expected model input features
-        expected_columns = ['Suburb', 'Address', 'Rooms', 'Type', 'Method', 'Seller', 'Date', 
-                            'Distance', 'Postcode', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 
-                            'BuildingArea', 'YearBuilt', 'CouncilArea', 'Lattitude', 'Longtitude', 
-                            'Region', 'Propertycount']
+        # Expected model input features (ONLY keep necessary ones)
+        expected_columns = ['Rooms', 'Distance', 'Landsize', 'BuildingArea', 'YearBuilt']
 
         # Reindex to match model’s expected columns
-        df = df.reindex(columns=expected_columns, fill_value="Unknown")
+        df = df.reindex(columns=expected_columns, fill_value=0)
 
         # Make prediction
         prediction = predict_model(model, data=df)
